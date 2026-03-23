@@ -614,77 +614,157 @@
   .btn-sessao-abrir:hover { background: #bbdefb; }
 
   /* ===================================================
-     RESPONSIVO
+     RESPONSIVO — MOBILE-FIRST
   ===================================================== */
 
-  /* --- Tablet (601px – 960px): painel esquerdo mais estreito --- */
+  /* Tab bar de navegação — oculta no desktop */
+  .mobile-tab-bar { display: none; }
+
+  /* ─── Tablet (601 – 960 px) ──────────────────────── */
   @media (max-width: 960px) {
-    .left { width: 40%; min-width: 160px; }
+    .left { width: 38%; min-width: 160px; }
     .cy-toolbar { flex-wrap: wrap; row-gap: 4px; padding: 6px 8px; }
-    .layout-select { max-width: 130px; }
-    .btn-exportar span.exp-txt { display: none; }   /* remove texto "Exportar", fica só ícone */
+    .layout-select { max-width: 110px; }
   }
 
-  /* --- Mobile (≤ 600px): empilha verticalmente --- */
+  /* ─── Mobile (≤ 600 px) ──────────────────────────── */
   @media (max-width: 600px) {
+
+    /* ---- Estrutura base ---- */
     body { overflow: hidden; }
-
     .container {
-      flex-direction: column;   /* empilha: COBOL em cima, diagrama embaixo */
+      flex-direction: column;
+      height: 100vh;
+      padding-bottom: 52px;   /* espaço para tab bar fixa */
     }
 
-    /* painel esquerdo passa de width para height */
+    /* ---- Painel Código (esquerdo) ---- */
     .left {
-      width: 100% !important;   /* ignora o inline width do JS */
-      max-width: 100%;
-      min-width: 0;
-      height: 42%;
-      min-height: 120px;
-      max-height: 75%;
-      padding: 10px 10px 6px;
-      gap: 6px;
+      width: 100% !important;
+      max-width: 100% !important;
+      min-width: 0 !important;
+      height: 100%;
+      max-height: 100%;
+      padding: 12px 12px 8px;
+      gap: 8px;
+      display: none;              /* controlado pelas abas */
     }
 
-    /* divisor vertical vira horizontal no mobile */
-    .divider {
-      width: 100%;
-      height: 6px;
-      cursor: row-resize;
-    }
-    /* pontilhado central horizontal */
-    .divider::after {
-      width: 40px;
-      height: 3px;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      border-left: none;
-      border-right: none;
-      border-top: 1px dotted #ccc;
-      border-bottom: 1px dotted #ccc;
+    /* ---- Painel Diagrama (direito) ---- */
+    .right {
+      width: 100% !important;
+      flex: unset;
+      height: 100%;
+      display: none;              /* controlado pelas abas */
+      flex-direction: column;
     }
 
-    textarea { font-size: 12px; }
+    /* ---- Aba ativa mostra o painel correspondente ---- */
+    .container.mob-code .left  { display: flex !important; }
+    .container.mob-flow .right { display: flex !important; }
 
-    /* botões de ação: lado a lado no mobile */
+    /* ---- Divisor vertical (substituído pela tab bar) ---- */
+    .divider { display: none !important; }
+
+    /* ---- Textarea ---- */
+    textarea { font-size: 13px; line-height: 1.6; }
+
+    /* ---- Botões do painel Código ---- */
     .btn-importar, .btn-gerar {
-      padding: 9px;
-      font-size: 13px;
+      padding: 13px 8px;
+      font-size: 15px;
+      border-radius: 8px;
     }
 
-    /* toolbar com quebra de linha */
+    /* ---- Toolbar ---- */
     .cy-toolbar {
       flex-wrap: wrap;
-      row-gap: 4px;
-      padding: 5px 8px;
+      row-gap: 5px;
+      column-gap: 4px;
+      padding: 7px 8px;
     }
-    .layout-select { max-width: 100%; flex: 1; }
-    .btn-reorganizar { flex: 1; }
-    .btn-exportar { flex: 1; justify-content: center; }
     .toolbar-sep { display: none; }
+    /* Oculta labels de texto puro */
+    .cy-toolbar > span:not(.zoom-level) { display: none; }
 
-    /* detalhes: altura menor no mobile */
-    #details { height: 80px; font-size: 11.5px; }
+    /* Zoom — alvos de toque maiores */
+    .zoom-btn   { width: 36px !important; height: 36px !important; font-size: 18px !important; }
+    .zoom-level { font-size: 13px; min-width: 46px; }
+    .btn-fit    { height: 36px !important; font-size: 13px !important; padding: 0 12px !important; }
+
+    /* Layout + Reorganizar */
+    .layout-select   { flex: 1; height: 36px; font-size: 13px; max-width: unset; }
+    .btn-reorganizar { height: 36px; font-size: 13px; flex: 0 0 auto; }
+
+    /* Exportar / Salvar / Abrir / Comentários */
+    .btn-exportar                       { height: 36px; font-size: 12px; padding: 0 10px; }
+    .btn-sessao-salvar, .btn-sessao-abrir { height: 36px; font-size: 12px; padding: 0 8px; }
+    .btn-comentarios                    { height: 36px; font-size: 12px; padding: 0 8px; }
+
+    /* Menu Exportar: abre para cima para não sair da tela */
+    .export-menu {
+      top: auto !important;
+      bottom: calc(100% + 4px) !important;
+    }
+
+    /* ---- Painel de detalhes ---- */
+    #details { height: 90px; font-size: 12px; padding: 8px 10px; }
+
+    /* ---- Painel de comentários → bottom sheet deslizante ---- */
+    .comments-divider { display: none !important; }
+    .comments-panel {
+      position: fixed !important;
+      bottom: 52px !important;   /* acima da tab bar */
+      left: 0 !important;
+      right: 0 !important;
+      top: auto !important;
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: 100% !important;
+      height: 0 !important;
+      border-left: none !important;
+      border-top: 2px solid #ffe082;
+      border-radius: 14px 14px 0 0;
+      box-shadow: 0 -4px 20px rgba(0,0,0,.18);
+      transition: height .3s ease !important;
+      z-index: 800;
+    }
+    .comments-panel.open {
+      height: 65vh !important;
+      width: 100% !important;
+    }
+
+    /* ---- Tab bar de navegação (fixa no rodapé) ---- */
+    .mobile-tab-bar {
+      display: flex;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 52px;
+      background: #fff;
+      border-top: 1px solid #ddd;
+      z-index: 900;
+      box-shadow: 0 -2px 8px rgba(0,0,0,.10);
+    }
+    .mobile-tab {
+      flex: 1;
+      border: none;
+      background: none;
+      color: #aaa;
+      cursor: pointer;
+      border-top: 3px solid transparent;
+      padding: 3px 0 2px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1px;
+      font-weight: 600;
+      transition: color .15s, border-color .15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .mobile-tab.active { color: #2e7d32; border-top-color: #2e7d32; }
+    .mobile-tab-icon   { font-size: 20px; line-height: 1; }
+    .mobile-tab-label  { font-size: 10px; line-height: 1; }
   }
 </style>
 </head>
@@ -857,6 +937,18 @@
 
 </div>
 
+</div>
+
+<!-- ===== BARRA DE ABAS MOBILE (oculta no desktop) ===== -->
+<div class="mobile-tab-bar" id="mobile-tab-bar">
+  <button class="mobile-tab active" id="mob-tab-code" onclick="mobTab('code')">
+    <span class="mobile-tab-icon">&#128196;</span>
+    <span class="mobile-tab-label">C&#243;digo</span>
+  </button>
+  <button class="mobile-tab" id="mob-tab-flow" onclick="mobTab('flow')">
+    <span class="mobile-tab-icon">&#128257;</span>
+    <span class="mobile-tab-label">Diagrama</span>
+  </button>
 </div>
 
 <script>
@@ -2278,6 +2370,8 @@ function analisar() {
   const fluxo = gerarFluxo(estrutura, tipos, secoes, meta);
   desenhar(fluxo, meta);
   if (window._refreshParaOffsets) window._refreshParaOffsets();
+  // Mobile: ao gerar o fluxo, muda automaticamente para a aba Diagrama
+  if (typeof mobTab === 'function' && window.innerWidth <= 600) { mobTab('flow'); }
 }
 
 // Retorna config do layout conforme seleção do usuário
@@ -2629,6 +2723,36 @@ function zoomFit() {
     document.body.style.userSelect = '';
     if (cy) cy.resize();
   });
+
+  // Touch support para dispositivos móveis
+  handle.addEventListener('touchstart', function(e) {
+    var t = e.touches[0];
+    dragging = true;
+    startY = t.clientY;
+    startH = details.getBoundingClientRect().height;
+    handle.classList.add('active');
+    document.body.style.userSelect = 'none';
+    e.preventDefault();
+  }, { passive: false });
+
+  document.addEventListener('touchmove', function(e) {
+    if (!dragging || !handle.classList.contains('active')) return;
+    var dy = startY - e.touches[0].clientY;
+    var rightH = rightPanel.getBoundingClientRect().height;
+    var toolbar = document.querySelector('.cy-toolbar').getBoundingClientRect().height;
+    var maxH = rightH - toolbar - 40;
+    var newH = Math.max(40, Math.min(maxH, startH + dy));
+    details.style.height = newH + 'px';
+    if (cy) cy.resize();
+  }, { passive: false });
+
+  document.addEventListener('touchend', function() {
+    if (!dragging || !handle.classList.contains('active')) return;
+    dragging = false;
+    handle.classList.remove('active');
+    document.body.style.userSelect = '';
+    if (cy) cy.resize();
+  });
 })();
 
 // ================= DIVISOR ARRASTÁVEL =================
@@ -2907,6 +3031,44 @@ function zoomFit() {
   document.addEventListener('keydown', function(e) {
     if (e.ctrlKey && e.key === 'Enter' && document.activeElement === elTA()) {
       salvarComentario();
+    }
+  });
+})();
+
+// ================= NAVEGAÇÃO MOBILE (TAB BAR) =================
+function mobTab(aba) {
+  var container = document.querySelector('.container');
+  container.classList.remove('mob-code', 'mob-flow');
+  container.classList.add('mob-' + aba);
+  var tabCode = document.getElementById('mob-tab-code');
+  var tabFlow = document.getElementById('mob-tab-flow');
+  if (tabCode) tabCode.classList.toggle('active', aba === 'code');
+  if (tabFlow) tabFlow.classList.toggle('active', aba === 'flow');
+  // Ao exibir o diagrama, reajusta o Cytoscape
+  if (aba === 'flow' && cy) {
+    setTimeout(function() {
+      cy.resize();
+      if (typeof atualizarZoomLabel === 'function') atualizarZoomLabel();
+    }, 60);
+  }
+}
+
+// Inicializa a aba ativa conforme tamanho da janela
+(function() {
+  function initTabs() {
+    if (window.innerWidth <= 600) {
+      mobTab('code');   // começa no Código para o usuário ver/editar antes de gerar
+    } else {
+      var container = document.querySelector('.container');
+      container.classList.remove('mob-code', 'mob-flow');
+    }
+  }
+  initTabs();
+  // Ao redimensionar (ex: rotação de tela), reseta o estado
+  window.addEventListener('resize', function() {
+    if (window.innerWidth > 600) {
+      var container = document.querySelector('.container');
+      container.classList.remove('mob-code', 'mob-flow');
     }
   });
 })();
