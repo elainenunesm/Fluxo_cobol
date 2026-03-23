@@ -2147,7 +2147,17 @@ function _download(urlOrData, nome) {
   var a = document.createElement('a');
   a.href = urlOrData;
   a.download = nome;
+  a.style.display = 'none';
+  // Necessário em FF mobile e Android: elemento deve estar no DOM para click funcionar
+  document.body.appendChild(a);
   a.click();
+  setTimeout(function() {
+    document.body.removeChild(a);
+    // Libera object URL se for blob: (PNG, SVG, HTML)
+    if (typeof urlOrData === 'string' && urlOrData.indexOf('blob:') === 0) {
+      URL.revokeObjectURL(urlOrData);
+    }
+  }, 300);
 }
 
 /** Retorna nome base para exportação (program-id ou timestamp) */
@@ -2297,31 +2307,46 @@ function exportarSessao() {
   var nome = (sessao.program || 'sessao').toLowerCase() + '-fluxo.json';
   fecharExportMenu();
 
-  // Tenta showSaveFilePicker (Chrome/Edge) — permite escolher pasta
+  // Tenta showSaveFilePicker (Chrome/Edge desktop) — permite escolher pasta
   if (window.showSaveFilePicker) {
     window.showSaveFilePicker({
       suggestedName: nome,
-      types: [{ description: 'Sessão COBOL Flow (JSON)', accept: { 'application/json': ['.json'] } }]
+      types: [{ description: 'Sess\u00e3o COBOL Flow (JSON)', accept: { 'application/json': ['.json'] } }]
     }).then(function(handle) {
       return handle.createWritable();
     }).then(function(writable) {
-      // write() retorna uma Promise — é preciso aguardá-la antes de close()
-      // sem isso, em mobile o arquivo pode ser truncado ou ficar vazio
       return writable.write(json).then(function() { return writable.close(); });
     }).catch(function(err) {
-      // Usuário cancelou ou API indisponível — fallback silencioso
-      if (err.name !== 'AbortError') {
-        var blob = new Blob([json], { type: 'application/json;charset=utf-8' });
-        _download(URL.createObjectURL(blob), nome);
-      }
+      if (err.name !== 'AbortError') { _downloadJsonSeguro(json, nome); }
     });
   } else {
-    // Fallback: download convencional
-    var blob = new Blob([json], { type: 'application/json;charset=utf-8' });
-    _download(URL.createObjectURL(blob), nome);
+    _downloadJsonSeguro(json, nome);
   }
 }
 
+/**
+ * Download de JSON confiável para todos os browsers/mobile.
+ * Usa data URL em vez de blob URL:
+ *   - data URL embute os dados diretamente → sem Object URL que pode ser
+ *     descartado (GC) antes do download em iOS Safari / Android WebView
+ *   - Funciona mesmo quando o atributo download é ignorado (iOS abre em
+ *     nova aba; o texto JSON fica íntegro para salvar via Compartilhar)
+ */
+function _downloadJsonSeguro(json, nome) {
+  try {
+    // encodeURIComponent preserva todos os caracteres UTF-8 do COBOL
+    var dataUrl = 'data:application/json;charset=utf-8,' + encodeURIComponent(json);
+    _download(dataUrl, nome);
+  } catch(e) {
+    // Último recurso: exibe o JSON em janela para o usuário copiar
+    var w = window.open('', '_blank');
+    if (w) {
+      w.document.write('<pre style="font-size:13px;word-break:break-all">' +
+        json.replace(/&/g,'&amp;').replace(/</g,'&lt;') + '</pre>');
+      w.document.title = nome;
+    }
+  }
+}
 
 function importarSessao(event) {
   var file = event.target.files[0];
