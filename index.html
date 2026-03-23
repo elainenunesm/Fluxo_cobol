@@ -279,6 +279,17 @@
     flex-shrink: 0;
   }
 
+  /* ===== GRUPOS DA TOOLBAR ===== */
+  /* Agrupa controles relacionados — facilitam o wrapping no mobile */
+  .tb-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  /* Grupo de layout se expande para preencher espaço restante */
+  .tb-layout { flex: 1; }
+
   #cy {
     flex: 1;
     background: #ffffff;
@@ -687,39 +698,43 @@
       border-radius: 8px;
     }
 
-    /* ---- Toolbar ---- */
-    .cy-toolbar {
-      flex-wrap: wrap;
-      row-gap: 5px;
-      column-gap: 4px;
-      padding: 7px 8px;
-    }
+    /* ---- Toolbar: 2 linhas limpas no mobile ---- */
+    .cy-toolbar { flex-wrap: wrap; row-gap: 7px; column-gap: 6px; padding: 8px 10px; }
     .toolbar-sep { display: none; }
-    /* Oculta labels de texto puro */
-    .cy-toolbar > span:not(.zoom-level) { display: none; }
 
-    /* Zoom — alvos de toque maiores */
-    .zoom-btn   { width: 36px !important; height: 36px !important; font-size: 18px !important; }
-    .zoom-level { font-size: 13px; min-width: 46px; }
-    .btn-fit    { height: 36px !important; font-size: 13px !important; padding: 0 12px !important; }
+    /* Linha 1: [Zoom fixo] + [Layout flex:1] */
+    .tb-zoom   { flex-shrink: 0; gap: 5px; }
+    .tb-layout { flex: 1 1 auto; min-width: 0; gap: 5px; }
 
-    /* Layout + Reorganizar */
-    .layout-select   { flex: 1; height: 36px; font-size: 13px; max-width: unset; }
-    .btn-reorganizar { height: 36px; font-size: 13px; flex: 0 0 auto; }
+    /* Linha 2: Ações — width:100% força nova linha */
+    .tb-actions { width: 100%; gap: 6px; flex-shrink: 0; }
 
-    /* Exportar / Salvar / Abrir / Comentários */
-    .btn-exportar                       { height: 36px; font-size: 12px; padding: 0 10px; }
-    .btn-sessao-salvar, .btn-sessao-abrir { height: 36px; font-size: 12px; padding: 0 8px; }
-    .btn-comentarios                    { height: 36px; font-size: 12px; padding: 0 8px; }
+    /* Salvar/Abrir já estão no menu Exportar — ocultar na toolbar mobile */
+    .btn-sessao-salvar,
+    .btn-sessao-abrir { display: none !important; }
 
-    /* Menu Exportar: abre para cima para não sair da tela */
-    .export-menu {
-      top: auto !important;
-      bottom: calc(100% + 4px) !important;
+    /* Alvos de toque: mínimo 44px (recomendação Apple/Google) */
+    .zoom-btn        { width: 44px !important; height: 44px !important; font-size: 20px !important; }
+    .zoom-level      { font-size: 13px; min-width: 46px; }
+    .btn-fit         { height: 44px !important; font-size: 15px !important; padding: 0 16px !important; }
+    .layout-select   { flex: 1; height: 44px; font-size: 14px; max-width: unset; }
+    .btn-reorganizar { height: 44px; font-size: 14px; flex: 0 0 auto; padding: 0 12px; }
+    .btn-exportar    { height: 44px; font-size: 14px; padding: 0 14px; flex: 1; justify-content: center; }
+    .btn-comentarios { height: 44px; font-size: 14px; padding: 0 14px; flex: 1; justify-content: center; }
+
+    /* Menu Exportar: abre para cima */
+    .export-menu { top: auto !important; bottom: calc(100% + 4px) !important; min-width: 210px; }
+    .export-menu button { padding: 11px 16px; font-size: 14px; }
+
+    /* ---- Painel de detalhes: compacto para maximizar o diagrama ---- */
+    #details { height: 60px; min-height: 50px; max-height: 60px; font-size: 11.5px; padding: 6px 10px; }
+    /* Divisor horizontal mais alto — fácil de tocar */
+    .divider-h { height: 14px; background: #e8e8e8; }
+    .divider-h::after {
+      width: 50px; height: 3px;
+      border-top: 2px solid #bbb;
+      border-bottom: none;
     }
-
-    /* ---- Painel de detalhes ---- */
-    #details { height: 90px; font-size: 12px; padding: 8px 10px; }
 
     /* ---- Painel de comentários → bottom sheet deslizante ---- */
     .comments-divider { display: none !important; }
@@ -862,7 +877,7 @@
 </textarea>
 
 <input type="file" id="file-input" accept=".txt" style="display:none" onchange="importarTxt(event)">
-<input type="file" id="sessao-input" accept=".json" style="display:none" onchange="importarSessao(event)">
+<input type="file" id="sessao-input" accept="application/json,.json" style="display:none" onchange="importarSessao(event)">
 <button class="btn-importar" onclick="document.getElementById('file-input').click()">&#128194; Importar .txt</button>
 <button class="btn-gerar" onclick="analisar()">Gerar Fluxo</button>
 </div>
@@ -871,38 +886,50 @@
 
 <div class="right">
 <div class="cy-toolbar">
-  <span>Zoom:</span>
-  <button class="zoom-btn" onclick="zoomIn()">+</button>
-  <span class="zoom-level" id="zoom-level">100%</span>
-  <button class="zoom-btn" onclick="zoomOut()">&#8722;</button>
-  <button class="btn-fit" onclick="zoomFit()" title="Ajustar tela">Fit</button>
-  <div class="toolbar-sep"></div>
-  <span style="font-size:12px;color:#555;">Layout:</span>
-  <select id="layout-select" class="layout-select" title="Escolha a organiza&#231;&#227;o visual do fluxo">
-    <option value="tb">&#8595; Vertical (padr&#227;o)</option>
-    <option value="lr">&#8594; Horizontal</option>
-    <option value="grid">&#9783; Grade (paragr&#225;fos lado a lado)</option>
-    <option value="compact">&#8609; Compacto (menos espa&#231;o)</option>
-  </select>
-  <button class="btn-reorganizar" onclick="reorganizar()" title="Reorganizar sem regen o fluxo">&#8635; Reorganizar</button>
-  <div class="toolbar-sep"></div>
-  <div class="btn-exportar-wrap" id="export-wrap">
-    <button class="btn-exportar" onclick="toggleExportMenu()" title="Exportar documenta&#231;&#227;o">&#128229; Exportar &#9660;</button>
-    <div class="export-menu" id="export-menu">
-      <button onclick="exportarPNG();fecharExportMenu()">&#128444; Imagem PNG (diagrama)</button>
-      <button onclick="exportarSVG();fecharExportMenu()">&#9673; Imagem SVG (vetorial)</button>
-      <hr class="menu-sep">
-      <button onclick="exportarHTML();fecharExportMenu()">&#128196; Relat&#243;rio HTML completo</button>
-      <hr class="menu-sep">
-      <button onclick="exportarSessao()" title="Salva c&#243;digo, fluxo, posi&#231;&#245;es e coment&#225;rios em JSON">&#128190; Salvar sess&#227;o (.json)</button>
-      <button onclick="document.getElementById('sessao-input').click();fecharExportMenu()" title="Restaura uma sess&#227;o salva anteriormente">&#128194; Importar sess&#227;o (.json)</button>
-    </div>
+
+  <!-- ── Grupo 1: Zoom ──────────────────────────── -->
+  <div class="tb-group tb-zoom">
+    <button class="zoom-btn" onclick="zoomIn()" title="Zoom +">+</button>
+    <span class="zoom-level" id="zoom-level">100%</span>
+    <button class="zoom-btn" onclick="zoomOut()" title="Zoom -">&#8722;</button>
+    <button class="btn-fit" onclick="zoomFit()" title="Ajustar diagrama à tela">Fit</button>
   </div>
+
   <div class="toolbar-sep"></div>
-  <button class="btn-sessao-salvar" onclick="exportarSessao()" title="Salvar sess&#227;o completa (c&#243;digo + fluxo + coment&#225;rios)">&#128190; Salvar</button>
-  <button class="btn-sessao-abrir" onclick="document.getElementById('sessao-input').click()" title="Abrir sess&#227;o salva">&#128194; Abrir</button>
+
+  <!-- ── Grupo 2: Layout ───────────────────────── -->
+  <div class="tb-group tb-layout">
+    <select id="layout-select" class="layout-select" title="Escolha a organiza&#231;&#227;o visual do fluxo">
+      <option value="tb">&#8595; Vertical (padr&#227;o)</option>
+      <option value="lr">&#8594; Horizontal</option>
+      <option value="grid">&#9783; Grade (paragr&#225;fos lado a lado)</option>
+      <option value="compact">&#8609; Compacto (menos espa&#231;o)</option>
+    </select>
+    <button class="btn-reorganizar" onclick="reorganizar()" title="Reorganizar sem regenerar o fluxo">&#8635; Reorganizar</button>
+  </div>
+
   <div class="toolbar-sep"></div>
-  <button class="btn-comentarios" id="btn-comentarios" onclick="toggleComentarios()" title="Abrir painel de coment&#225;rios">&#128172; Coment&#225;rios</button>
+
+  <!-- ── Grupo 3: Ações ───────────────────────── -->
+  <div class="tb-group tb-actions">
+    <div class="btn-exportar-wrap" id="export-wrap">
+      <button class="btn-exportar" onclick="toggleExportMenu()" title="Exportar documenta&#231;&#227;o">&#128229; Exportar &#9660;</button>
+      <div class="export-menu" id="export-menu">
+        <button onclick="exportarPNG();fecharExportMenu()">&#128444; Imagem PNG (diagrama)</button>
+        <button onclick="exportarSVG();fecharExportMenu()">&#9673; Imagem SVG (vetorial)</button>
+        <hr class="menu-sep">
+        <button onclick="exportarHTML();fecharExportMenu()">&#128196; Relat&#243;rio HTML completo</button>
+        <hr class="menu-sep">
+        <button onclick="exportarSessao()" title="Salva c&#243;digo, fluxo, posi&#231;&#245;es e coment&#225;rios em JSON">&#128190; Salvar sess&#227;o (.json)</button>
+        <button onclick="document.getElementById('sessao-input').click();fecharExportMenu()" title="Restaura uma sess&#227;o salva anteriormente">&#128194; Importar sess&#227;o (.json)</button>
+      </div>
+    </div>
+    <!-- Salvar/Abrir ficam visíveis no desktop; ocultos no mobile (já estão no menu Exportar) -->
+    <button class="btn-sessao-salvar" onclick="exportarSessao()" title="Salvar sess&#227;o completa (c&#243;digo + fluxo + coment&#225;rios)">&#128190; Salvar</button>
+    <button class="btn-sessao-abrir" onclick="document.getElementById('sessao-input').click()" title="Abrir sess&#227;o salva">&#128194; Abrir</button>
+    <button class="btn-comentarios" id="btn-comentarios" onclick="toggleComentarios()" title="Abrir painel de coment&#225;rios">&#128172; Coment&#225;rios</button>
+  </div>
+
 </div>
 <div id="cy"></div>
 <div id="details-divider" class="divider-h" title="Arraste para redimensionar"></div>
@@ -2278,8 +2305,9 @@ function exportarSessao() {
     }).then(function(handle) {
       return handle.createWritable();
     }).then(function(writable) {
-      writable.write(json);
-      return writable.close();
+      // write() retorna uma Promise — é preciso aguardá-la antes de close()
+      // sem isso, em mobile o arquivo pode ser truncado ou ficar vazio
+      return writable.write(json).then(function() { return writable.close(); });
     }).catch(function(err) {
       // Usuário cancelou ou API indisponível — fallback silencioso
       if (err.name !== 'AbortError') {
@@ -2301,9 +2329,13 @@ function importarSessao(event) {
   var reader = new FileReader();
   reader.onload = function(e) {
     var sessao;
-    try { sessao = JSON.parse(e.target.result); }
-    catch(err) { alert('Arquivo de sessão inválido (JSON corrompido).'); return; }
-    if (!sessao || !sessao.cobol) { alert('Arquivo de sessão inválido (campo cobol ausente).'); return; }
+    try {
+      // Remove BOM (\uFEFF) que alguns sistemas mobile adicionam ao salvar
+      var text = e.target.result.replace(/^\uFEFF/, '');
+      sessao = JSON.parse(text);
+    }
+    catch(err) { alert('Arquivo de sess\u00e3o inv\u00e1lido (JSON corrompido).\n\nDetalhe: ' + err.message); return; }
+    if (!sessao || !sessao.cobol) { alert('Arquivo de sess\u00e3o inv\u00e1lido (campo cobol ausente).'); return; }
 
     // ── LIMPEZA COMPLETA antes de restaurar ──────────────────
     // 1) Limpa textarea
@@ -2366,7 +2398,7 @@ function importarSessao(event) {
       if (window._refreshParaOffsets) window._refreshParaOffsets();
     }, 400);
   };
-  reader.readAsText(file);
+  reader.readAsText(file, 'UTF-8');  // encoding explícito evita problemas em mobile
   event.target.value = '';
 }
 
