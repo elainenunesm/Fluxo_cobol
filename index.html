@@ -643,18 +643,25 @@
       width: 100% !important;
       max-width: 100% !important;
       min-width: 0 !important;
-      height: 100%;
-      max-height: 100%;
+      /* flex:1 + min-height:0 garante que o painel preenche o espaço
+         disponível sem ultrapassar — ao contrário de height:100% que
+         em alguns browsers ignora o padding-bottom do container */
+      flex: 1 1 0;
+      min-height: 0;
       padding: 12px 12px 8px;
       gap: 8px;
       display: none;              /* controlado pelas abas */
     }
+    /* Impede a textarea de exceder o painel e esconder os botões */
+    .left textarea { min-height: 0; }
+    /* Oculta o título "COBOL Input" — desnecessário no mobile */
+    .left h3 { display: none; }
 
     /* ---- Painel Diagrama (direito) ---- */
     .right {
       width: 100% !important;
-      flex: unset;
-      height: 100%;
+      flex: 1 1 0;
+      min-height: 0;
       display: none;              /* controlado pelas abas */
       flex-direction: column;
     }
@@ -3064,11 +3071,18 @@ function mobTab(aba) {
     }
   }
   initTabs();
-  // Ao redimensionar (ex: rotação de tela), reseta o estado
+  // Ao redimensionar (ex: rotação de tela), mantém abas corretas
   window.addEventListener('resize', function() {
+    var container = document.querySelector('.container');
     if (window.innerWidth > 600) {
-      var container = document.querySelector('.container');
+      // Voltou para desktop: remove classes de aba
       container.classList.remove('mob-code', 'mob-flow');
+    } else {
+      // Entrou no modo mobile: garante que uma aba esteja activa
+      if (!container.classList.contains('mob-code') &&
+          !container.classList.contains('mob-flow')) {
+        mobTab('code');
+      }
     }
   });
 })();
